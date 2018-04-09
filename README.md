@@ -20,7 +20,7 @@ Or you can use the formatter on your existing logger
 ```ruby
 logger = Logger.new(STDOUT, progname: 'my-cool-app', formatter: Splunk::Logger::LogfmtFormatter.new)
 logger.debug({ foo: 'bar' })
-#=> severity=DEBUG _time=2018-04-09T15:10:44+10:00 pid=12345 progname=my-cool-app message=foo
+#=> severity=DEBUG _time=2018-04-09T15:10:44+10:00 pid=12345 progname=my-cool-app foo=bar
 ```
 
 **The log formatter will only accept instances of `Hash`, `Array`, and `Exception`.** 
