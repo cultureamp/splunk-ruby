@@ -5,14 +5,40 @@ module Splunk
     class LogfmtFormatter
       Format = "severity=%s _time=%s pid=%d progname=%s %s\n".freeze
 
-      attr_accessor :datetime_format
+      class << self
+        def from_hash(hash)
+          raise ArgumentError, "#{hash} is not a Hash" unless hash.is_a?(Hash)
+          hash
+            .compact
+            .collect { |key, value| "#{quote_if_needed(key.to_s)}=#{parse_value(value)}" }
+            .join(' ')
+        end
 
-      def initialize
-        @datetime_format = nil
+        def from_exception(ex)
+          raise ArgumentError, "#{ex} is not an Exception" unless ex.is_a?(Exception)
+          backtrace = (ex.backtrace || [])[0]
+          /(?<filename>\w+):(?<line_number>\w+):in `(?<method_name>\w+)'/ =~ backtrace
+          from_hash({ error: ex.message, file: filename, line: line_number, function: method_name })
+        end
+
+        def from_array(array)
+          raise ArgumentError, "#{array} is not an Array" unless array.is_a?(Array)
+          raise ArgumentError, "#{array} does not contain an even number of values" if array.length % 2 != 0
+          from_hash(array.each_slice(2).to_h)
+        end
+
+        def quote_if_needed(str)
+          str.include?(' ') ? str.inspect : str
+        end
+
+        def parse_value(value)
+          raise ArgumentError, "#{value} is not a Symbol or String" unless value.is_a?(String) || value.is_a?(Symbol)
+          quote_if_needed(value.to_s)
+        end
       end
 
       def call(severity, time, progname, msg)
-        Format % [severity, format_datetime(time), $$, quote_if_needed(progname || 'splunk-logger'), msg2str(msg)]
+        Format % [severity, format_datetime(time), $$, (progname || 'splunk-logger'), msg2str(msg)]
       end
 
       private
@@ -24,27 +50,14 @@ module Splunk
       def msg2str(msg)
         case msg
         when ::Hash
-          msg.collect { |key, value| "#{quote_if_needed(key.to_s)}=#{quote_if_needed(value.to_s)}" }.join(' ')
-        when ::String
-          msg.split('=').size == 1 ? "message=#{quote_if_needed(msg.to_s)}" : msg
+          LogfmtFormatter.from_hash(msg)
         when ::Exception
-          backtrace = (msg.backtrace || [])[0]
-          /(?<filename>\w+):(?<line_number>\w+):in `(?<method_name>\w+)'/ =~ backtrace
-          new_msg = { error: msg.message, file: filename, line: line_number, function: method_name }.compact
-          msg2str(new_msg)
-        when ::DateTime, ::Time
-          "datetime=#{format_datetime(msg)}"
-        when ::Date
-          "date=#{format_datetime(msg)}"
+          LogfmtFormatter.from_exception(msg)
         when ::Array
-          msg2str((msg.length % 2 != 0) ? msg.inspect : msg.each_slice(2).to_a.to_h)
+          LogfmtFormatter.from_array(msg)
         else
-          msg.inspect
+          raise ArgumentError, "This formatter only accepts Hashes, Arrays, and Exceptions"
         end
-      end
-
-      def quote_if_needed(str)
-        str.include?(' ') ? str.inspect : str
       end
     end
   end
