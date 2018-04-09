@@ -12,8 +12,7 @@ module Splunk
       end
 
       def call(severity, time, progname, msg)
-        Format % [severity, format_datetime(time), $$, progname,
-          msg2str(msg)]
+        Format % [severity, format_datetime(time), $$, quote_if_needed(progname || 'splunk-logger'), msg2str(msg)]
       end
 
       private

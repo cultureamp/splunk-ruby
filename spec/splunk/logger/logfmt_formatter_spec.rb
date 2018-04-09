@@ -1,5 +1,4 @@
 require 'splunk/logger/logfmt_formatter'
-require 'logger'
 
 RSpec.describe Splunk::Logger::LogfmtFormatter do
   PREFIX = 'severity=INFO _time=[0-9\-T:+]+ pid=\d+ progname=splunk-ruby'.freeze
