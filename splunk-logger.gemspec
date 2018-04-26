@@ -11,4 +11,5 @@ Gem::Specification.new do |s|
   s.homepage    = 'https://github.com/cultureamp/splunk-ruby'
 
   s.add_development_dependency "rspec", "~> 3.7"
+  s.add_development_dependency "rubocop", "~> 0.55.0"
 end

@@ -1,16 +1,17 @@
 require 'time'
+require 'English'
 
 module Splunk
   class Logger
     class LogfmtFormatter
-      Format = "severity=%s _time=%s pid=%d progname=%s %s\n".freeze
+      FORMAT = "severity=%s _time=%s pid=%d progname=%s %s\n".freeze
 
       class << self
         def from_hash(hash)
           raise ArgumentError, "#{hash} is not a Hash" unless hash.is_a?(Hash)
           hash
             .compact
-            .collect { |key, value| "#{quote_if_needed(key.to_s)}=#{parse_value(value)}" }
+            .map { |key, value| "#{quote_if_needed(key.to_s)}=#{parse_value(value)}" }
             .join(' ')
         end
 
@@ -18,12 +19,17 @@ module Splunk
           raise ArgumentError, "#{ex} is not an Exception" unless ex.is_a?(Exception)
           backtrace = (ex.backtrace || [])[0]
           /(?<filename>\w+):(?<line_number>\w+):in `(?<method_name>\w+)'/ =~ backtrace
-          from_hash({ error: ex.message, file: filename, line: line_number, function: method_name })
+          from_hash(
+            error: ex.message,
+            file: filename,
+            line: line_number,
+            function: method_name,
+          )
         end
 
         def from_array(array)
           raise ArgumentError, "#{array} is not an Array" unless array.is_a?(Array)
-          raise ArgumentError, "#{array} does not contain an even number of values" if array.length % 2 != 0
+          raise ArgumentError, "#{array} does not contain an even number of values" if array.length.odd?
           from_hash(array.each_slice(2).to_h)
         end
 
@@ -38,7 +44,7 @@ module Splunk
       end
 
       def call(severity, time, progname, msg)
-        Format % [severity, format_datetime(time), $$, (progname || 'splunk-logger'), msg2str(msg)]
+        format(FORMAT, [severity, format_datetime(time), $PID, (progname || 'splunk-logger'), msg2str(msg)])
       end
 
       private
