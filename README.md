@@ -1,3 +1,11 @@
+# :warning: This gem is deprecated!
+
+This gem comforms to an outdated version of our logging standard.
+
+Work is underway to replace this gem. Follow [ca-logger-ruby](https://github.com/cultureamp/ca-logger-ruby) for updates (and if you need a Ruby logger _now_, see David Barrell or Tim Riley).
+
+---
+
 # splunk-ruby
 Ruby gem for logging to splunk conforming to sensible defaults
 
