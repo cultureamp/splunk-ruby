@@ -30,13 +30,13 @@ RSpec.describe Splunk::Logger::LogfmtFormatter do
 
     context 'when passed a hash' do
       it 'logs keys and values in logfmt to the logger via info' do
-        expect(formatter.call(severity, time, progname, { foo: 'bar' })).to match(/\A#{PREFIX} foo=bar\n\z/)
+        expect(formatter.call(severity, time, progname, foo: 'bar')).to match(/\A#{PREFIX} foo=bar\n\z/)
       end
     end
 
     context 'when passed a nested hash' do
       it 'raises an exception' do
-        expect { formatter.call(severity, time, progname, { foo: { bar: 'baz' } }) }.to raise_error(ArgumentError)
+        expect { formatter.call(severity, time, progname, foo: { bar: 'baz' }) }.to raise_error(ArgumentError)
       end
     end
 
